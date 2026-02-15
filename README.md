@@ -1,42 +1,65 @@
+# Kalman Filter on TinyTapeout
+
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-# Tiny Tapeout Verilog Project Template
+This project implements a simplified Kalman Filter for MPU-6500 sensor fusion on TinyTapeout ASIC and FPGA.
 
-- [Read the documentation for project](docs/info.md)
+## Features
 
-## What is Tiny Tapeout?
+*   **Sensor Interface**: SPI Master for MPU-6500 (Accelerometer + Gyroscope).
+*   **Angle Calculation**: CORDIC-based `atan2` calculation for Roll and Pitch from accelerometer data.
+*   **Sensor Fusion**: Steady-state Kalman Filter (Complementary Filter) to fuse Gyroscope rate with Accelerometer angle.
+*   **Output**: UART Serial output (9600 baud) streaming Roll, Pitch, and Yaw.
 
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
+## Pinout
 
-To learn more and get started, visit https://tinytapeout.com.
+| Pin | Function | Description |
+|---|---|---|
+| `ui_in[0]` | **MISO** | SPI Master In Slave Out (from Sensor) |
+| `uo_out[0]` | **MOSI** | SPI Master Out Slave In (to Sensor) |
+| `uo_out[1]` | **SCLK** | SPI Clock |
+| `uo_out[2]` | **CS_N** | SPI Chip Select (Active Low) |
+| `uo_out[3]` | **TX** | UART Transmit (to PC) |
+| `clk` | **CLK** | System Clock (10MHz default) |
+| `rst_n` | **RST** | Reset (Active Low) |
 
-## Set up your Verilog project
+## Data Format
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
+The device outputs a continuous stream of 8-byte packets at 9600 baud.
 
-The GitHub action will automatically build the ASIC files using [LibreLane](https://www.zerotoasiccourse.com/terminology/librelane/).
+| Byte | Value |
+|---|---|
+| 0 | `0xDE` (Header) |
+| 1 | `0xAD` (Header) |
+| 2 | Roll (High Byte) |
+| 3 | Roll (Low Byte) |
+| 4 | Pitch (High Byte) |
+| 5 | Pitch (Low Byte) |
+| 6 | Yaw (High Byte) |
+| 7 | Yaw (Low Byte) |
 
-## Enable GitHub actions to build the results page
+Angles are 16-bit signed integers. Scale: `32768 = 180 degrees`.
 
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
+## FPGA Implementation
 
-## Resources
+The design is compatible with iCE40 FPGAs (specifically tested for iCEBreaker).
+See `fpga/` directory for build files.
 
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
+To build for iCEBreaker:
+```bash
+cd fpga
+make prog
+```
+Note: The FPGA build uses a 12MHz clock configuration.
 
-## What next?
+## Simulation
 
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
-  - Bluesky [@tinytapeout.com](https://bsky.app/profile/tinytapeout.com)
+To run the testbench (using Cocotb):
+```bash
+cd test
+make
+```
+
+## License
+
+Apache 2.0

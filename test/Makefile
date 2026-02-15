@@ -1,12 +1,9 @@
-# Makefile
-# See https://docs.cocotb.org/en/stable/quickstart.html for more info
-
-# defaults
 SIM ?= icarus
-FST ?= -fst # Use more efficient FST format
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
+PROJECT_SOURCES = project.v spi_master.v mpu_driver.v cordic.v kalman.v uart_tx.v
+# Pass parameters to speed up simulation
+COMPILE_ARGS += -Pmpu_driver.INIT_WAIT_CYCLES=10 -Pmpu_driver.TIMER_LIMIT=20 -Puart_tx.BAUD_DIV=5
 
 ifneq ($(GATES),yes)
 

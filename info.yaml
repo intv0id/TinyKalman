@@ -11,19 +11,24 @@ project:
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
-  top_module:  "tt_um_example"
+  top_module:  "tt_um_kalman"
 
   # List your project's source files here.
   # Source files must be in ./src and you must list each source file separately, one per line.
   # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
   source_files:
     - "project.v"
+    - "spi_master.v"
+    - "mpu_driver.v"
+    - "cordic.v"
+    - "kalman.v"
+    - "uart_tx.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
   # Inputs
-  ui[0]: ""
+  ui[0]: "SPI_MISO"
   ui[1]: ""
   ui[2]: ""
   ui[3]: ""
@@ -33,10 +38,10 @@ pinout:
   ui[7]: ""
 
   # Outputs
-  uo[0]: ""
-  uo[1]: ""
-  uo[2]: ""
-  uo[3]: ""
+  uo[0]: "SPI_MOSI"
+  uo[1]: "SPI_SCLK"
+  uo[2]: "SPI_CS_N"
+  uo[3]: "UART_TX"
   uo[4]: ""
   uo[5]: ""
   uo[6]: ""

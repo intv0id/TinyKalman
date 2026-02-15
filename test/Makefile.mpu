@@ -1,0 +1,7 @@
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+VERILOG_SOURCES = $(PWD)/../src/mpu_driver.v $(PWD)/../src/spi_master.v
+TOPLEVEL = mpu_driver
+MODULE = test_mpu
+COMPILE_ARGS += -Pmpu_driver.INIT_WAIT_CYCLES=10 -Pmpu_driver.TIMER_LIMIT=20
+include $(shell cocotb-config --makefiles)/Makefile.sim

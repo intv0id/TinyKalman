@@ -1,0 +1,8 @@
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+VERILOG_SOURCES = $(PWD)/../src/project.v $(PWD)/../src/spi_master.v $(PWD)/../src/mpu_driver.v $(PWD)/../src/cordic.v $(PWD)/../src/kalman.v $(PWD)/../src/uart_tx.v
+TOPLEVEL = tt_um_kalman
+MODULE = test_project
+# Override parameters deep in hierarchy for speed
+COMPILE_ARGS += -Ptt_um_kalman.mpu_inst.INIT_WAIT_CYCLES=10 -Ptt_um_kalman.mpu_inst.TIMER_LIMIT=20 -Ptt_um_kalman.uart_inst.BAUD_DIV=5
+include $(shell cocotb-config --makefiles)/Makefile.sim

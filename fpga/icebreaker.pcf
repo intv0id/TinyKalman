@@ -1,0 +1,24 @@
+# 12 MHz clock
+set_io -nowarn clk        35
+
+# User Button as Reset
+set_io -nowarn rst_n      10
+
+# UART (FTDI)
+set_io -nowarn uo_out[3]  6    # TX to PC
+
+# SPI (MPU-6500) connected to PMOD 1A
+# Pinout: 1=CS, 2=MOSI, 3=MISO, 4=SCK
+set_io -nowarn uo_out[2]  4    # CS_N (P1A1)
+set_io -nowarn uo_out[0]  2    # MOSI (P1A2)
+set_io -nowarn ui_in[0]   47   # MISO (P1A3)
+set_io -nowarn uo_out[1]  45   # SCLK (P1A4)
+
+# Unused Outputs
+set_io -nowarn uo_out[4]  44
+set_io -nowarn uo_out[5]  46
+set_io -nowarn uo_out[6]  48
+set_io -nowarn uo_out[7]  3
+
+# Unused Inputs (uio)
+# ...
