@@ -43,8 +43,18 @@ module tt_um_kalman #(
     wire mpu_valid;
 
     // MPU Driver
+    // Use localparam for derived parameters to avoid ambiguity,
+    // BUT we want to be able to override them for simulation speedup.
+    // If we use parameters here, they can be overridden by defparam on tt_um_kalman instance.
+
+    // Let's expose MPU parameters up to the top level for easier overriding?
+    // Or just trust the hierarchy.
+
+    // The issue might be: mpu_driver uses `parameter` which defaults to calculation based on `SYS_CLK_FREQ`.
+    // If we override `INIT_WAIT_CYCLES` on `mpu_inst`, it should work.
+
     mpu_driver #(
-        .CLK_DIV(CLK_FREQ / 2000000), // SysClk / 2MHz = 5 for 10MHz
+        .CLK_DIV(CLK_DIV), // Use calculated parameter below
         .SAMPLE_RATE_HZ(100),
         .SYS_CLK_FREQ(CLK_FREQ)
     ) mpu_inst (
@@ -62,6 +72,13 @@ module tt_um_kalman #(
         .gyro_z(gyro_z),
         .valid(mpu_valid)
     );
+
+    // Helper localparam for CLK_DIV
+`ifdef FAST_SIM
+    localparam CLK_DIV = 2;
+`else
+    localparam CLK_DIV = CLK_FREQ / 2000000;
+`endif
 
     // CORDIC Shared Instance
     reg cordic_start;
@@ -146,8 +163,15 @@ module tt_um_kalman #(
     wire uart_busy, uart_done;
     reg [3:0] uart_cnt;
 
+    // Helper localparam for BAUD_DIV
+`ifdef FAST_SIM
+    localparam BAUD_DIV_PARAM = 5;
+`else
+    localparam BAUD_DIV_PARAM = CLK_FREQ / 9600;
+`endif
+
     uart_tx #(
-        .BAUD_DIV(CLK_FREQ / 9600) // 9600 @ CLK_FREQ
+        .BAUD_DIV(BAUD_DIV_PARAM)
     ) uart_inst (
         .clk(clk),
         .rst_n(rst_n),

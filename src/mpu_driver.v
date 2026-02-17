@@ -5,9 +5,14 @@ module mpu_driver #(
     parameter SAMPLE_RATE_HZ = 100, // 100Hz sample rate
     parameter SYS_CLK_FREQ = 10000000,
     // Timer for sample rate
+`ifdef FAST_SIM
+    parameter TIMER_LIMIT = 20,
+    parameter INIT_WAIT_CYCLES = 10
+`else
     parameter TIMER_LIMIT = SYS_CLK_FREQ / SAMPLE_RATE_HZ,
     // Timer for initialization wait (e.g., 10ms)
     parameter INIT_WAIT_CYCLES = SYS_CLK_FREQ / 100
+`endif
 )(
     input  wire        clk,
     input  wire        rst_n,
