@@ -11,6 +11,35 @@ This project implements a simplified Kalman Filter for MPU-6500 sensor fusion on
 *   **Sensor Fusion**: Steady-state Kalman Filter (Complementary Filter) to fuse Gyroscope rate with Accelerometer angle.
 *   **Output**: UART Serial output (9600 baud) streaming Roll, Pitch, and Yaw.
 
+## Algorithm Details
+
+### 1. Angle Estimation (CORDIC)
+Roll ($\phi$) and Pitch ($\theta$) angles are calculated from the accelerometer vector using an iterative **CORDIC** (COordinate Rotation DIgital Computer) algorithm in vectoring mode. This calculates `atan2(y, x)` efficiently without multipliers.
+
+*   **Roll**: $\phi = \text{atan2}(a_y, a_z)$
+*   **Pitch**: $\theta = \text{atan2}(-a_x, \sqrt{a_y^2 + a_z^2})$
+
+*Note: In this implementation, the Pitch calculation uses a simplified approximation where the magnitude output from the Roll CORDIC is used as the denominator.*
+
+### 2. Sensor Fusion (Complementary / Kalman Filter)
+The design uses a steady-state 1D Kalman Filter (mathematically equivalent to a Complementary Filter) for both Roll and Pitch axes. This fuses the noisy but stable accelerometer angle with the precise but drifting gyroscope rate.
+
+**Equations:**
+1.  **Prediction (Gyro Integration):**
+    $$ \theta_{pred}[k] = \theta_{est}[k-1] + (\text{GyroRate} \times \Delta t) $$
+    *Implemented as:* `pred_angle = angle_out + (rate >>> 6)`
+
+2.  **Update (Accelerometer Correction):**
+    $$ \theta_{est}[k] = \theta_{pred}[k] + K \times (\theta_{acc}[k] - \theta_{pred}[k]) $$
+    *Implemented as:* `angle_out = pred_angle + ((angle_m - pred_angle) >>> 6)`
+
+*   **Gain ($K$):** The Kalman Gain is fixed at $1/64$ (`>>> 6`), balancing responsiveness and noise rejection for a standard 100Hz IMU loop.
+*   **Time Step ($\Delta t$):** The rate shift factor (`>>> 6`) implicitly handles the scaling for the time step and gyro sensitivity.
+
+### 3. Yaw Integration
+Yaw ($\psi$) is calculated by simple integration of the Z-axis gyroscope rate, as there is no magnetometer for correction.
+*   $\psi[k] = \psi[k-1] + (\text{GyroRate}_z \times \Delta t)$
+
 ## Pinout
 
 | Pin | Function | Description |
