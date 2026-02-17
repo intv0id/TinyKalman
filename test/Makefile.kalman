@@ -1,0 +1,7 @@
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+VERILOG_SOURCES = $(PWD)/../src/kalman.v
+TOPLEVEL = kalman
+MODULE = test_kalman
+COMPILE_ARGS += -Pkalman.K_SHIFT=2
+include $(shell cocotb-config --makefiles)/Makefile.sim

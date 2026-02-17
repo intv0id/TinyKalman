@@ -1,0 +1,8 @@
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+VERILOG_SOURCES = $(PWD)/../src/cordic.v
+TOPLEVEL = cordic
+MODULE = test_cordic
+# Test with reduced width
+COMPILE_ARGS += -Pcordic.WIDTH=12 -Pcordic.STAGES=12
+include $(shell cocotb-config --makefiles)/Makefile.sim

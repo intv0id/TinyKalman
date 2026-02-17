@@ -1,12 +1,10 @@
-# Makefile
-# See https://docs.cocotb.org/en/stable/quickstart.html for more info
-
-# defaults
 SIM ?= icarus
-FST ?= -fst # Use more efficient FST format
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
+PROJECT_SOURCES = project.v spi_master.v mpu_driver.v cordic.v kalman.v uart_tx.v
+
+# Enable Fast Simulation
+COMPILE_ARGS += -DFAST_SIM
 
 ifneq ($(GATES),yes)
 
