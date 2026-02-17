@@ -70,8 +70,13 @@ module mpu_driver #(
         .data_out(spi_data_out)
     );
 
-    // Temporary storage for reading 14 bytes
-    reg [7:0] data_buffer [0:13];
+    // Optimized: Only store 14 bytes if necessary, but we can decode on the fly
+    // Actually we need 12 bytes (Accel X,Y,Z, Gyro X,Y,Z). Temp is skipped.
+    // However, to save registers, we can shift into output registers directly?
+    // Not easily because output registers are 16-bit and we get 8-bit chunks.
+    // BUT we can remove `data_buffer` and write directly to `accel_x` etc.
+
+    // Let's remove data_buffer and use a case statement on byte_cnt to direct data.
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -165,7 +170,23 @@ module mpu_driver #(
 
                 S_READ_BYTES_WAIT: begin
                     if (spi_done) begin
-                        data_buffer[byte_cnt] <= spi_data_out;
+                        // Optimized: Write directly to output registers
+                        case (byte_cnt)
+                            0: accel_x[15:8] <= spi_data_out;
+                            1: accel_x[7:0]  <= spi_data_out;
+                            2: accel_y[15:8] <= spi_data_out;
+                            3: accel_y[7:0]  <= spi_data_out;
+                            4: accel_z[15:8] <= spi_data_out;
+                            5: accel_z[7:0]  <= spi_data_out;
+                            // 6, 7: Temp - Ignore
+                            8: gyro_x[15:8] <= spi_data_out;
+                            9: gyro_x[7:0]  <= spi_data_out;
+                            10: gyro_y[15:8] <= spi_data_out;
+                            11: gyro_y[7:0]  <= spi_data_out;
+                            12: gyro_z[15:8] <= spi_data_out;
+                            13: gyro_z[7:0]  <= spi_data_out;
+                        endcase
+
                         if (byte_cnt == 13) begin
                             state <= S_UPDATE;
                         end else begin
@@ -177,17 +198,6 @@ module mpu_driver #(
 
                 S_UPDATE: begin
                     spi_cs_n <= 1; // Deassert CS
-
-                    // Combine bytes into 16-bit signed values
-                    // Big Endian (High byte first)
-                    accel_x <= {data_buffer[0], data_buffer[1]};
-                    accel_y <= {data_buffer[2], data_buffer[3]};
-                    accel_z <= {data_buffer[4], data_buffer[5]};
-                    // Temp is [6], [7] - skipped
-                    gyro_x  <= {data_buffer[8], data_buffer[9]};
-                    gyro_y  <= {data_buffer[10], data_buffer[11]};
-                    gyro_z  <= {data_buffer[12], data_buffer[13]};
-
                     valid <= 1;
                     state <= S_IDLE;
                 end

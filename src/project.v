@@ -69,10 +69,14 @@ module tt_um_kalman #(
     wire signed [15:0] cordic_angle, cordic_mag;
     wire cordic_done;
 
-    cordic cordic_inst (
+    cordic #(
+        .WIDTH(12),
+        .STAGES(12)
+    ) cordic_inst (
         .clk(clk),
         .rst_n(rst_n),
         .start(cordic_start),
+        // Truncate inputs to 12 bits internally
         .x_in(cordic_x),
         .y_in(cordic_y),
         .angle_out(cordic_angle),
