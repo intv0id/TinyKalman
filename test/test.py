@@ -8,6 +8,15 @@ from cocotb.triggers import ClockCycles
 
 @cocotb.test()
 async def test_project(dut):
+    """
+    Test the basic functionality of the tt_um_example module.
+
+    This test:
+    - Initializes the clock.
+    - Resets the design.
+    - Sets input values (ui_in and uio_in).
+    - Verifies that the output (uo_out) is the sum of the inputs.
+    """
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
