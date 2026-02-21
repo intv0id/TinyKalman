@@ -1,6 +1,9 @@
 # Kalman Filter on TinyTapeout
 
-![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
+[![gds](https://github.com/intv0id/TinyKalman/actions/workflows/gds.yaml/badge.svg?branch=main)](https://github.com/intv0id/TinyKalman/actions/workflows/gds.yaml)
+[![docs](https://github.com/intv0id/TinyKalman/actions/workflows/docs.yaml/badge.svg?branch=main)](https://github.com/intv0id/TinyKalman/actions/workflows/docs.yaml) 
+[![test](https://github.com/intv0id/TinyKalman/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/intv0id/TinyKalman/actions/workflows/test.yaml)
+[![fpga](https://github.com/intv0id/TinyKalman/actions/workflows/fpga.yaml/badge.svg?branch=main)](https://github.com/intv0id/TinyKalman/actions/workflows/fpga.yaml)
 
 This project implements a simplified Kalman Filter for MPU-6500 sensor fusion on TinyTapeout ASIC and FPGA.
 
