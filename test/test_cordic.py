@@ -25,12 +25,22 @@ async def test_cordic_atan2(dut):
     # Test cases: (x, y) -> expected angle
     # Scale: 32768 = 180 deg.
     test_cases = [
-        (10000, 10000, 45.0),   # 45 deg
-        (10000, 0, 0.0),        # 0 deg
-        (0, 10000, 90.0),       # 90 deg
-        (-10000, 10000, 135.0), # 135 deg
-        (-10000, -10000, -135.0), # -135 deg
-        (10000, -10000, -45.0), # -45 deg
+        (10000, 10000, 45.0),      # 45 deg
+        (10000, 0, 0.0),           # 0 deg
+        (0, 10000, 90.0),          # 90 deg
+        (-10000, 10000, 135.0),    # 135 deg
+        (-10000, -10000, -135.0),  # -135 deg
+        (10000, -10000, -45.0),    # -45 deg
+        # Edge cases
+        (0, 0, 0.0),               # (0,0) -> 0 deg (Undefined but expected to be stable)
+        (32767, 0, 0.0),           # Max positive X
+        (0, 32767, 90.0),          # Max positive Y
+        (-32768, 0, 180.0),        # Min negative X
+        (0, -32768, -90.0),        # Min negative Y
+        (32767, 32767, 45.0),      # Max positive X, Max positive Y
+        (-32768, -32768, -135.0),  # Min negative X, Min negative Y
+        (-32768, 1, 180.0),        # Quadrant boundary (upper)
+        (-32768, -1, -180.0),      # Quadrant boundary (lower)
     ]
 
     for x, y, expected_deg in test_cases:
