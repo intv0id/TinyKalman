@@ -24,7 +24,7 @@ async def spi_miso_driver(dut):
             # Check bit 2 (CS_N)
             val_int = int(val)
             cs_val = (val_int >> 2) & 1
-        except:
+        except ValueError:
             cs_val = 1
 
         if cs_val == 0:
@@ -57,7 +57,8 @@ async def test_top_level(dut):
                 fast_sim = True
                 dut._log.info(f"CS_N detected at cycle {i}. Mode: FAST SIMULATION.")
                 break
-        except: pass
+        except ValueError:
+            pass
 
     if not fast_sim:
         dut._log.info("CS_N not detected yet. Mode: DEFAULT (GLS/Slow).")
@@ -84,7 +85,7 @@ async def test_top_level(dut):
         try:
             val_int = int(dut.uo_out.value)
             uart_val = (val_int >> 3) & 1 # Bit 3
-        except:
+        except ValueError:
             uart_val = 1
 
         if prev_val == 1 and uart_val == 0:
@@ -110,7 +111,8 @@ async def test_top_level(dut):
         try:
             val_int = int(dut.uo_out.value)
             bit = (val_int >> 3) & 1
-        except: bit = 0
+        except ValueError:
+            bit = 0
         if bit == 1: byte_val |= (1 << bit_idx)
 
     dut._log.info(f"Received: {hex(byte_val)}")
@@ -137,7 +139,8 @@ async def test_top_level(dut):
         try:
             val = int(dut.uo_out.value)
             bit = (val >> 3) & 1
-        except: bit = 1
+        except ValueError:
+            bit = 1
 
         if prev_val == 1 and bit == 0:
             next_start = True
@@ -157,7 +160,8 @@ async def test_top_level(dut):
         try:
             val_int = int(dut.uo_out.value)
             bit = (val_int >> 3) & 1
-        except: bit = 0
+        except ValueError:
+            bit = 0
         if bit == 1: byte_val |= (1 << bit_idx)
 
     dut._log.info(f"Received: {hex(byte_val)}")
