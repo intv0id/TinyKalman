@@ -32,6 +32,20 @@ async def spi_miso_driver(dut):
         else:
             dut.ui_in.value = 0
 
+async def read_uart_byte(dut, bit_period, pin_idx=3):
+    """Reads 8 bits from the UART pin."""
+    byte_val = 0
+    for bit_idx in range(8):
+        await ClockCycles(dut.clk, bit_period)
+        try:
+            val_int = int(dut.uo_out.value)
+            bit = (val_int >> pin_idx) & 1
+        except ValueError:
+            bit = 0
+        if bit == 1:
+            byte_val |= (1 << bit_idx)
+    return byte_val
+
 @cocotb.test()
 async def test_top_level(dut):
     cocotb.start_soon(generate_clock(dut))
@@ -105,15 +119,7 @@ async def test_top_level(dut):
     # Wait 0.5 bit period to center
     await ClockCycles(dut.clk, bit_period // 2)
 
-    byte_val = 0
-    for bit_idx in range(8):
-        await ClockCycles(dut.clk, bit_period)
-        try:
-            val_int = int(dut.uo_out.value)
-            bit = (val_int >> 3) & 1
-        except ValueError:
-            bit = 0
-        if bit == 1: byte_val |= (1 << bit_idx)
+    byte_val = await read_uart_byte(dut, bit_period)
 
     dut._log.info(f"Received: {hex(byte_val)}")
 
@@ -154,15 +160,7 @@ async def test_top_level(dut):
     # Decode Byte 2 (0xAD)
     await ClockCycles(dut.clk, bit_period // 2)
 
-    byte_val = 0
-    for bit_idx in range(8):
-        await ClockCycles(dut.clk, bit_period)
-        try:
-            val_int = int(dut.uo_out.value)
-            bit = (val_int >> 3) & 1
-        except ValueError:
-            bit = 0
-        if bit == 1: byte_val |= (1 << bit_idx)
+    byte_val = await read_uart_byte(dut, bit_period)
 
     dut._log.info(f"Received: {hex(byte_val)}")
     if byte_val == 0xAD:
