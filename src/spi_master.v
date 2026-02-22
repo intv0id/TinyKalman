@@ -31,6 +31,20 @@ module spi_master #(
     reg [7:0] clk_cnt;
     reg [7:0] shift_reg;
 
+    // 2-stage synchronizer for MISO
+    reg miso_sync_0;
+    reg miso_sync_1;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            miso_sync_0 <= 1'b0;
+            miso_sync_1 <= 1'b0;
+        end else begin
+            miso_sync_0 <= miso;
+            miso_sync_1 <= miso_sync_0;
+        end
+    end
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state     <= IDLE;
@@ -73,14 +87,14 @@ module spi_master #(
                 WAIT_RISE: begin // Waiting to drive SCLK High (Trailing Edge)
                     if (clk_cnt == CLK_DIV - 1) begin
                         sclk      <= 1'b1; // Drive High (Trailing Edge)
-                        shift_reg <= {shift_reg[6:0], miso}; // Sample MISO (CPHA=1: Sample on trailing)
+                        shift_reg <= {shift_reg[6:0], miso_sync_1}; // Sample MISO (CPHA=1: Sample on trailing)
                         clk_cnt   <= 0;
 
                         if (bit_cnt == 7) begin
                             state    <= IDLE;
                             done     <= 1'b1;
                             busy     <= 1'b0;
-                            data_out <= {shift_reg[6:0], miso};
+                            data_out <= {shift_reg[6:0], miso_sync_1};
                         end else begin
                             bit_cnt <= bit_cnt + 1;
                             state   <= WAIT_FALL;
