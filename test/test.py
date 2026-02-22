@@ -1,5 +1,5 @@
 import cocotb
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge, Timer
 
 async def reset(dut):
     dut.rst_n.value = 0
@@ -102,11 +102,11 @@ async def test_top_level(dut):
 
     # Proceed with decoding
     # Wait 0.5 bit period to center
-    for _ in range(bit_period // 2): await RisingEdge(dut.clk)
+    await ClockCycles(dut.clk, bit_period // 2)
 
     byte_val = 0
     for bit_idx in range(8):
-        for _ in range(bit_period): await RisingEdge(dut.clk)
+        await ClockCycles(dut.clk, bit_period)
         try:
             val_int = int(dut.uo_out.value)
             bit = (val_int >> 3) & 1
@@ -127,7 +127,7 @@ async def test_top_level(dut):
 
     # Verify next byte is 0xAD
     # Stop bit
-    for _ in range(bit_period): await RisingEdge(dut.clk)
+    await ClockCycles(dut.clk, bit_period)
 
     # Next Start bit search (allow small gap)
     next_start = False
@@ -149,11 +149,11 @@ async def test_top_level(dut):
         return # Partial pass? No, fail.
 
     # Decode Byte 2 (0xAD)
-    for _ in range(bit_period // 2): await RisingEdge(dut.clk)
+    await ClockCycles(dut.clk, bit_period // 2)
 
     byte_val = 0
     for bit_idx in range(8):
-        for _ in range(bit_period): await RisingEdge(dut.clk)
+        await ClockCycles(dut.clk, bit_period)
         try:
             val_int = int(dut.uo_out.value)
             bit = (val_int >> 3) & 1
