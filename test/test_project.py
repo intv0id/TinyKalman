@@ -79,6 +79,26 @@ async def spi_slave_mock(dut):
 
         await RisingEdge(dut.clk)
 
+async def read_uart_byte(dut, baud_rate=9600):
+    """Decodes a single byte from the UART TX line."""
+    # Calculate bit time in ns (1e9 / 9600 ~= 104166.67 ns)
+    bit_time_ns = 1_000_000_000 / baud_rate
+
+    # Wait for Start Bit (Falling Edge)
+    while dut.uart_tx_out.value == 1:
+        await RisingEdge(dut.clk)
+
+    # Wait 1.5 bit times to sample the middle of bit 0
+    await Timer(bit_time_ns * 1.5, units="ns")
+
+    byte = 0
+    for i in range(8):
+        if dut.uart_tx_out.value == 1:
+            byte |= (1 << i)
+        await Timer(bit_time_ns, units="ns")
+
+    return byte
+
 @cocotb.test()
 async def test_top_level(dut):
     """Test full system integration."""
@@ -89,84 +109,26 @@ async def test_top_level(dut):
 
     dut._log.info("Waiting for UART output...")
 
-    # We need to capture UART output.
-    # Since UART is slow (9600 baud), simulation will take time.
-    # We can speed up UART by changing parameter in DUT if possible,
-    # or just checking the parallel data in the design.
-    # But let's try to capture at least the Header.
+    # Read 8 bytes from the UART stream
+    received_bytes = []
+    for i in range(8):
+        byte = await read_uart_byte(dut)
+        received_bytes.append(byte)
+        dut._log.info(f"Received UART Byte {i}: {hex(byte)}")
 
-    # Wait for UART Start bit (TX goes low)
-    while dut.uart_tx_out.value == 1:
-        await RisingEdge(dut.clk)
-
-    dut._log.info("UART Start Bit Detected!")
-
-    # Verify we get the sequence 0xDE, 0xAD...
-    # We can snoop the internal `uart_data` register in `tt_um_kalman`.
-
-    # Wait until state is S_SEND_UART
-    while dut.state.value != 6: # S_SEND_UART
-        await RisingEdge(dut.clk)
-
-    # Check data sequence
-    # Note: this snooping depends on timing.
-    # It sends 8 bytes.
-    expected_data = [0xDE, 0xAD]
-
-    for expected in expected_data:
-        # Wait for data to be loaded
-        while dut.uart_data.value != expected:
-            await RisingEdge(dut.clk)
-            # Timeout check?
-
-        dut._log.info(f"Seen UART Data: {hex(expected)}")
-
-        # Wait for next byte (Wait for UART done)
-        while dut.uart_done.value == 0:
-            await RisingEdge(dut.clk)
-        while dut.uart_done.value == 1: # Wait for done to clear
-             await RisingEdge(dut.clk)
-
+    # 1. Verify Header
+    assert received_bytes[0] == 0xDE
+    assert received_bytes[1] == 0xAD
     dut._log.info("Header verified!")
 
-    # Should check Roll/Pitch/Yaw
-    # With Accel Z=1G, Roll/Pitch should be 0.
-    # Gyro Z=640. Yaw should increase.
-
-    # Wait for Yaw byte (last 2 bytes)
-    # Indices 6 and 7.
-    # Currently index 2 (Roll H).
-
-    # Skip Roll H, L, Pitch H, L
-    for i in range(4):
-        while dut.uart_done.value == 0:
-            await RisingEdge(dut.clk)
-        while dut.uart_done.value == 1:
-             await RisingEdge(dut.clk)
-
-    # Now Yaw H (Index 6)
-    while dut.uart_cnt.value != 6:
-        await RisingEdge(dut.clk)
-
-    yaw_h = int(dut.uart_data.value)
-
-    while dut.uart_done.value == 0:
-        await RisingEdge(dut.clk)
-    while dut.uart_done.value == 1:
-         await RisingEdge(dut.clk)
-
-    # Yaw L (Index 7)
-    while dut.uart_cnt.value != 7:
-        await RisingEdge(dut.clk)
-
-    yaw_l = int(dut.uart_data.value)
-
+    # 2. Verify Yaw (Bytes 6 and 7)
+    # Gyro Z input was 640.
+    # Expected calculation: Yaw += (Rate >>> 6)
+    # 640 / 64 = 10.
+    yaw_h = received_bytes[6]
+    yaw_l = received_bytes[7]
     yaw_val = (yaw_h << 8) | yaw_l
     dut._log.info(f"Yaw Value: {yaw_val}")
 
-    # Yaw should be > 0 (integrated 1 step)
-    # Rate = 640. Shift 6 -> 10.
-    # Yaw = 10.
-    assert yaw_val == 10 or yaw_val == 0 # Depending on when we catch it
-
+    assert yaw_val == 10
     dut._log.info("Test Passed!")
