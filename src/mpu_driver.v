@@ -206,6 +206,12 @@ module mpu_driver #(
                     valid <= 1;
                     state <= S_IDLE;
                 end
+
+                default: begin
+                    state    <= S_INIT;
+                    timer    <= 0;
+                    spi_cs_n <= 1;
+                end
             endcase
         end
     end
