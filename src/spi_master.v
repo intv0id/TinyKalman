@@ -28,7 +28,7 @@ module spi_master #(
 
     reg [1:0] state;
     reg [2:0] bit_cnt;
-    reg [7:0] clk_cnt;
+    reg [15:0] clk_cnt; // 16-bit to allow for slower SPI clocks
     reg [7:0] shift_reg;
 
     // 2-stage synchronizer for MISO
