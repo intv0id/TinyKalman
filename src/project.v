@@ -77,7 +77,8 @@ module tt_um_kalman #(
 `ifdef FAST_SIM
     localparam CLK_DIV = 2;
 `else
-    localparam CLK_DIV = CLK_FREQ / 2000000;
+    localparam CLK_DIV_RAW = CLK_FREQ / 2000000;
+    localparam CLK_DIV = (CLK_DIV_RAW > 0) ? CLK_DIV_RAW : 1;
 `endif
 
     // CORDIC Shared Instance
@@ -167,7 +168,8 @@ module tt_um_kalman #(
 `ifdef FAST_SIM
     localparam BAUD_DIV_PARAM = 5;
 `else
-    localparam BAUD_DIV_PARAM = CLK_FREQ / 9600;
+    localparam BAUD_DIV_PARAM_RAW = CLK_FREQ / 9600;
+    localparam BAUD_DIV_PARAM = (BAUD_DIV_PARAM_RAW > 0) ? BAUD_DIV_PARAM_RAW : 1;
 `endif
 
     uart_tx #(
